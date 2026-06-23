@@ -32,30 +32,30 @@
 # POSAAS Service - Governance Configuration
 # Engineering Manager must approve all governance config changes for posaas
 # ------------------------------------------------------------------------------
-/governance/posaas/snyk.properties                    @ngpos-em-posaas
-/governance/posaas/sonar.properties                   @ngpos-em-posaas
-/governance/posaas/pact.properties                    @ngpos-em-posaas
-/governance/posaas/unit-test.properties               @ngpos-em-posaas
-/governance/posaas/bdd-test.properties                @ngpos-em-posaas
-/governance/posaas/integration-test.properties        @ngpos-em-posaas
+/governance/posaas/snyk.properties                    @HarshitaY-KR
+/governance/posaas/sonar.properties                   @HarshitaY-KR
+/governance/posaas/pact.properties                    @HarshitaY-KR
+/governance/posaas/unit-test.properties               @HarshitaY-KR
+/governance/posaas/bdd-test.properties                @HarshitaY-KR
+/governance/posaas/integration-test.properties        @HarshitaY-KR
 
 # Wildcard rule: Any file in posaas governance folder
-/governance/posaas/                                   @ngpos-em-posaas
+/governance/posaas/                                   @HarshitaY-KR
 
 
 # ------------------------------------------------------------------------------
 # POSWF Service - Governance Configuration
 # Engineering Manager must approve all governance config changes for poswf
 # ------------------------------------------------------------------------------
-/governance/poswf/snyk.properties                     @ngpos-em-poswf
-/governance/poswf/sonar.properties                    @ngpos-em-poswf
-/governance/poswf/pact.properties                     @ngpos-em-poswf
-/governance/poswf/unit-test.properties                @ngpos-em-poswf
-/governance/poswf/bdd-test.properties                 @ngpos-em-poswf
-/governance/poswf/integration-test.properties         @ngpos-em-poswf
+/governance/poswf/snyk.properties                     @HarshitaY-KR
+/governance/poswf/sonar.properties                    @HarshitaY-KR
+/governance/poswf/pact.properties                     @HarshitaY-KR
+/governance/poswf/unit-test.properties                @HarshitaY-KR
+/governance/poswf/bdd-test.properties                 @HarshitaY-KR
+/governance/poswf/integration-test.properties         @HarshitaY-KR
 
 # Wildcard rule: Any file in poswf governance folder
-/governance/poswf/                                    @ngpos-em-poswf
+/governance/poswf/                                    @HarshitaY-KR
 
 
 # ------------------------------------------------------------------------------
@@ -108,7 +108,7 @@
 # Catch-all rule: Any governance folder modification requires EM approval
 # This acts as a safety net for any new files or subdirectories
 # ------------------------------------------------------------------------------
-/governance/                                          @ngpos-em-posaas @ngpos-em-poswf @HarshitaY-KR
+/governance/                                          @HarshitaY-KR
 
 
 # ==================================================
@@ -120,4 +120,4 @@
 # ==================================================
 
 # CODEOWNERS file itself requires all EMs to approve changes
-/.github/CODEOWNERS                                   @ngpos-em-posaas @ngpos-em-poswf @HarshitaY-KR
+/.github/CODEOWNERS                                   @HarshitaY-KR
