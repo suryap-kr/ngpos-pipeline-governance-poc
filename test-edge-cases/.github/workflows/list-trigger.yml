@@ -1,0 +1,10 @@
+# Test case: list of triggers
+name: List Trigger Format
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build application
+        run: npm run build

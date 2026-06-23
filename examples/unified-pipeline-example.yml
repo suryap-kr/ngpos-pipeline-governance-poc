@@ -1,0 +1,490 @@
+# ==================================================
+# UNIFIED PIPELINE - GOVERNANCE POC EXAMPLE
+# ==================================================
+#
+# PURPOSE:
+# This example demonstrates how a service repository (e.g., posaas) would
+# consume governance configurations from a centralized governance repository.
+#
+# GOVERNANCE MODEL:
+# 1. Service repos contain application code only
+# 2. Governance repo contains all pipeline standards/thresholds
+# 3. Service pipelines read governance configs at runtime
+# 4. Engineering Managers control governance via CODEOWNERS
+# 5. Developers cannot bypass security/quality gates
+#
+# FLOW:
+# Service Repo (posaas) → Checkout Governance Repo → Read Config → Execute Pipeline
+#
+# NOTE: This is a POC/demo example, not production-ready
+# ==================================================
+
+name: Unified Pipeline with Governance
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  # Governance repository configuration
+  # In production, this could be a Git submodule or separate repository
+  GOVERNANCE_REPO: 'company/ngpos-pipeline-governance'
+  GOVERNANCE_BRANCH: 'main'
+
+  # Service identifier - determines which governance config to use
+  SERVICE_NAME: 'posaas'
+
+  # Path where governance configs will be available
+  GOVERNANCE_PATH: './governance-configs'
+
+jobs:
+  # ==================================================
+  # STAGE 0: SETUP & GOVERNANCE CONFIG LOADING
+  # ==================================================
+  setup:
+    name: Setup & Load Governance Configs
+    runs-on: ubuntu-latest
+    outputs:
+      # Snyk configurations
+      snyk_enabled: ${{ steps.parse-configs.outputs.snyk_enabled }}
+      snyk_fail_on_error: ${{ steps.parse-configs.outputs.snyk_fail_on_error }}
+      snyk_threshold: ${{ steps.parse-configs.outputs.snyk_threshold }}
+
+      # Sonar configurations
+      sonar_enabled: ${{ steps.parse-configs.outputs.sonar_enabled }}
+      sonar_fail_on_error: ${{ steps.parse-configs.outputs.sonar_fail_on_error }}
+      sonar_coverage_threshold: ${{ steps.parse-configs.outputs.sonar_coverage_threshold }}
+
+      # Pact configurations
+      pact_enabled: ${{ steps.parse-configs.outputs.pact_enabled }}
+      pact_fail_on_error: ${{ steps.parse-configs.outputs.pact_fail_on_error }}
+      pact_broker_url: ${{ steps.parse-configs.outputs.pact_broker_url }}
+
+      # Unit test configurations
+      unit_test_enabled: ${{ steps.parse-configs.outputs.unit_test_enabled }}
+      unit_test_fail_on_error: ${{ steps.parse-configs.outputs.unit_test_fail_on_error }}
+      unit_test_min_coverage: ${{ steps.parse-configs.outputs.unit_test_min_coverage }}
+
+      # BDD test configurations
+      bdd_enabled: ${{ steps.parse-configs.outputs.bdd_enabled }}
+      bdd_fail_on_error: ${{ steps.parse-configs.outputs.bdd_fail_on_error }}
+
+      # Integration test configurations
+      integration_enabled: ${{ steps.parse-configs.outputs.integration_enabled }}
+      integration_fail_on_error: ${{ steps.parse-configs.outputs.integration_fail_on_error }}
+
+    steps:
+      # Step 1: Checkout the service repository code
+      # This is the actual application code (e.g., posaas service)
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+        with:
+          path: service
+
+      # Step 2: Checkout the governance repository
+      # This contains all the centralized governance configurations
+      # In production, this could be a Git submodule or referenced differently
+      - name: Checkout Governance Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GOVERNANCE_REPO }}
+          ref: ${{ env.GOVERNANCE_BRANCH }}
+          path: ${{ env.GOVERNANCE_PATH }}
+          # token: ${{ secrets.GOVERNANCE_REPO_TOKEN }}  # Uncomment if private repo
+
+      # Step 3: Verify governance configs exist
+      # Fail fast if governance configs are missing
+      - name: Verify Governance Configs Exist
+        run: |
+          echo "🔍 Verifying governance configurations for service: ${{ env.SERVICE_NAME }}"
+
+          GOVERNANCE_DIR="${{ env.GOVERNANCE_PATH }}/governance/${{ env.SERVICE_NAME }}"
+
+          if [ ! -d "$GOVERNANCE_DIR" ]; then
+            echo "❌ ERROR: Governance directory not found: $GOVERNANCE_DIR"
+            exit 1
+          fi
+
+          # Check all required governance files exist
+          REQUIRED_FILES=(
+            "snyk.properties"
+            "sonar.properties"
+            "pact.properties"
+            "unit-test.properties"
+            "bdd-test.properties"
+            "integration-test.properties"
+          )
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$GOVERNANCE_DIR/$file" ]; then
+              echo "❌ ERROR: Required governance file missing: $file"
+              exit 1
+            fi
+            echo "✅ Found: $file"
+          done
+
+          echo "✅ All governance configurations verified"
+
+      # Step 4: Parse governance properties files
+      # Read all .properties files and convert them to GitHub Actions outputs
+      # This makes the values available to subsequent jobs
+      - name: Parse Governance Configurations
+        id: parse-configs
+        run: |
+          echo "📖 Parsing governance configurations..."
+
+          GOVERNANCE_DIR="${{ env.GOVERNANCE_PATH }}/governance/${{ env.SERVICE_NAME }}"
+
+          # Helper function to read property value from .properties file
+          get_property() {
+            local file=$1
+            local key=$2
+            local default=$3
+
+            # Read property, strip comments, trim whitespace
+            value=$(grep "^${key}=" "$file" | cut -d'=' -f2- | sed 's/#.*//' | xargs)
+
+            # Return default if empty
+            if [ -z "$value" ]; then
+              echo "$default"
+            else
+              echo "$value"
+            fi
+          }
+
+          # ===== SNYK PROPERTIES =====
+          SNYK_FILE="$GOVERNANCE_DIR/snyk.properties"
+          echo "snyk_enabled=$(get_property $SNYK_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "snyk_fail_on_error=$(get_property $SNYK_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+          echo "snyk_threshold=$(get_property $SNYK_FILE 'severity.threshold' 'high')" >> $GITHUB_OUTPUT
+
+          # ===== SONAR PROPERTIES =====
+          SONAR_FILE="$GOVERNANCE_DIR/sonar.properties"
+          echo "sonar_enabled=$(get_property $SONAR_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "sonar_fail_on_error=$(get_property $SONAR_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+          echo "sonar_coverage_threshold=$(get_property $SONAR_FILE 'coverage.threshold' '80')" >> $GITHUB_OUTPUT
+
+          # ===== PACT PROPERTIES =====
+          PACT_FILE="$GOVERNANCE_DIR/pact.properties"
+          echo "pact_enabled=$(get_property $PACT_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "pact_fail_on_error=$(get_property $PACT_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+          echo "pact_broker_url=$(get_property $PACT_FILE 'pact.broker.url' '')" >> $GITHUB_OUTPUT
+
+          # ===== UNIT TEST PROPERTIES =====
+          UNIT_FILE="$GOVERNANCE_DIR/unit-test.properties"
+          echo "unit_test_enabled=$(get_property $UNIT_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "unit_test_fail_on_error=$(get_property $UNIT_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+          echo "unit_test_min_coverage=$(get_property $UNIT_FILE 'min.coverage.percentage' '80')" >> $GITHUB_OUTPUT
+
+          # ===== BDD TEST PROPERTIES =====
+          BDD_FILE="$GOVERNANCE_DIR/bdd-test.properties"
+          echo "bdd_enabled=$(get_property $BDD_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "bdd_fail_on_error=$(get_property $BDD_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+
+          # ===== INTEGRATION TEST PROPERTIES =====
+          INTEGRATION_FILE="$GOVERNANCE_DIR/integration-test.properties"
+          echo "integration_enabled=$(get_property $INTEGRATION_FILE 'enabled' 'false')" >> $GITHUB_OUTPUT
+          echo "integration_fail_on_error=$(get_property $INTEGRATION_FILE 'failOnError' 'true')" >> $GITHUB_OUTPUT
+
+          echo "✅ Governance configurations parsed successfully"
+
+      # Step 5: Display parsed configuration (for debugging/visibility)
+      - name: Display Governance Configuration
+        run: |
+          echo "📋 Governance Configuration for ${{ env.SERVICE_NAME }}:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 Snyk Security Scanning:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.snyk_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.snyk_fail_on_error }}"
+          echo "   Threshold: ${{ steps.parse-configs.outputs.snyk_threshold }}"
+          echo ""
+          echo "📊 SonarQube Code Quality:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.sonar_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.sonar_fail_on_error }}"
+          echo "   Coverage Threshold: ${{ steps.parse-configs.outputs.sonar_coverage_threshold }}%"
+          echo ""
+          echo "🤝 Pact Contract Testing:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.pact_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.pact_fail_on_error }}"
+          echo "   Broker URL: ${{ steps.parse-configs.outputs.pact_broker_url }}"
+          echo ""
+          echo "🧪 Unit Tests:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.unit_test_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.unit_test_fail_on_error }}"
+          echo "   Min Coverage: ${{ steps.parse-configs.outputs.unit_test_min_coverage }}%"
+          echo ""
+          echo "🎭 BDD Tests:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.bdd_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.bdd_fail_on_error }}"
+          echo ""
+          echo "🔗 Integration Tests:"
+          echo "   Enabled: ${{ steps.parse-configs.outputs.integration_enabled }}"
+          echo "   Fail on Error: ${{ steps.parse-configs.outputs.integration_fail_on_error }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ==================================================
+  # STAGE 1: UNIT TESTS
+  # ==================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    # Only run if unit tests are enabled in governance config
+    if: needs.setup.outputs.unit_test_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.unit_test_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Run Unit Tests
+        run: |
+          echo "🧪 Running unit tests with governance-enforced coverage threshold..."
+          echo "📊 Required Coverage: ${{ needs.setup.outputs.unit_test_min_coverage }}%"
+
+          # Example: Run tests with coverage
+          # npm test -- --coverage --coverageThreshold='{"global":{"lines":${{ needs.setup.outputs.unit_test_min_coverage }}}}'
+          # mvn test jacoco:report jacoco:check -Djacoco.coverage.minimum=${{ needs.setup.outputs.unit_test_min_coverage }}
+          # go test -coverprofile=coverage.out -covermode=atomic ./... && go tool cover -func=coverage.out
+
+          echo "✅ Unit tests completed"
+          echo "Note: Actual test execution would happen here"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: target/test-reports/  # Adjust based on language
+          retention-days: 30
+
+  # ==================================================
+  # STAGE 2: SECURITY SCANNING (SNYK)
+  # ==================================================
+  security-scan:
+    name: Security Scan (Snyk)
+    runs-on: ubuntu-latest
+    needs: setup
+    # Only run if Snyk is enabled in governance config
+    if: needs.setup.outputs.snyk_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.snyk_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Run Snyk Security Scan
+        run: |
+          echo "🔒 Running Snyk security scan..."
+          echo "📊 Severity Threshold: ${{ needs.setup.outputs.snyk_threshold }}"
+
+          # Example: Run Snyk scan
+          # snyk test --severity-threshold=${{ needs.setup.outputs.snyk_threshold }}
+          # snyk monitor
+
+          echo "✅ Security scan completed"
+          echo "Note: Actual Snyk scan would happen here"
+          echo "Governance enforces: No critical vulnerabilities allowed"
+
+  # ==================================================
+  # STAGE 3: CODE QUALITY (SONARQUBE)
+  # ==================================================
+  code-quality:
+    name: Code Quality (SonarQube)
+    runs-on: ubuntu-latest
+    needs: [setup, unit-tests]
+    # Only run if SonarQube is enabled in governance config
+    if: needs.setup.outputs.sonar_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.sonar_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Download Unit Test Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: target/test-reports/
+
+      - name: Run SonarQube Analysis
+        run: |
+          echo "📊 Running SonarQube code quality analysis..."
+          echo "📈 Coverage Threshold: ${{ needs.setup.outputs.sonar_coverage_threshold }}%"
+
+          # Example: Run SonarQube scan
+          # sonar-scanner \
+          #   -Dsonar.host.url=https://sonarqube.company.com \
+          #   -Dsonar.projectKey=posaas \
+          #   -Dsonar.coverage.exclusions=**/*Test.java \
+          #   -Dsonar.qualitygate.wait=true
+
+          echo "✅ Code quality analysis completed"
+          echo "Note: Actual SonarQube scan would happen here"
+          echo "Governance enforces: ${{ needs.setup.outputs.sonar_coverage_threshold }}% coverage minimum"
+
+  # ==================================================
+  # STAGE 4: CONTRACT TESTING (PACT)
+  # ==================================================
+  contract-tests:
+    name: Contract Tests (Pact)
+    runs-on: ubuntu-latest
+    needs: setup
+    # Only run if Pact is enabled in governance config
+    if: needs.setup.outputs.pact_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.pact_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Run Pact Contract Tests
+        run: |
+          echo "🤝 Running Pact contract tests..."
+          echo "📡 Broker URL: ${{ needs.setup.outputs.pact_broker_url }}"
+
+          # Example: Run Pact tests (consumer side)
+          # npm run test:pact
+          # pact-broker publish ./pacts --broker-base-url=${{ needs.setup.outputs.pact_broker_url }}
+
+          # Example: Verify Pact contracts (provider side)
+          # mvn verify -Dpact.verifier.publishResults=true
+
+          echo "✅ Contract tests completed"
+          echo "Note: Actual Pact verification would happen here"
+
+  # ==================================================
+  # STAGE 5: INTEGRATION TESTS
+  # ==================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [setup, unit-tests]
+    # Only run if integration tests are enabled in governance config
+    if: needs.setup.outputs.integration_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.integration_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Setup Test Environment
+        run: |
+          echo "🔧 Setting up integration test environment..."
+          # Example: Start dependencies with docker-compose or testcontainers
+          # docker-compose -f docker-compose.test.yml up -d
+          echo "✅ Test environment ready"
+
+      - name: Run Integration Tests
+        run: |
+          echo "🔗 Running integration tests..."
+
+          # Example: Run integration tests
+          # mvn verify -Pintegration-tests
+          # npm run test:integration
+          # go test -tags=integration ./...
+
+          echo "✅ Integration tests completed"
+          echo "Note: Actual integration tests would happen here"
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: target/integration-reports/
+          retention-days: 30
+
+  # ==================================================
+  # STAGE 6: BDD/ACCEPTANCE TESTS
+  # ==================================================
+  bdd-tests:
+    name: BDD/Acceptance Tests
+    runs-on: ubuntu-latest
+    needs: [setup, integration-tests]
+    # Only run if BDD tests are enabled in governance config
+    if: needs.setup.outputs.bdd_enabled == 'true'
+    # Continue pipeline even if this fails, unless governance says to fail
+    continue-on-error: ${{ needs.setup.outputs.bdd_fail_on_error != 'true' }}
+
+    steps:
+      - name: Checkout Service Code
+        uses: actions/checkout@v4
+
+      - name: Setup BDD Test Environment
+        run: |
+          echo "🎭 Setting up BDD test environment (staging)..."
+          # Example: Deploy to staging or start test environment
+          echo "✅ BDD environment ready"
+
+      - name: Run BDD Tests
+        run: |
+          echo "🎯 Running BDD/Acceptance tests..."
+
+          # Example: Run Cucumber/BDD tests
+          # mvn verify -Pacceptance-tests
+          # npm run test:bdd
+          # behave features/
+
+          echo "✅ BDD tests completed"
+          echo "Note: Actual BDD tests would happen here"
+
+      - name: Upload BDD Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bdd-test-results
+          path: target/bdd-reports/
+          retention-days: 30
+
+  # ==================================================
+  # STAGE 7: PIPELINE SUMMARY
+  # ==================================================
+  pipeline-summary:
+    name: Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [setup, unit-tests, security-scan, code-quality, contract-tests, integration-tests, bdd-tests]
+    if: always()
+
+    steps:
+      - name: Display Pipeline Results
+        run: |
+          echo "════════════════════════════════════════════════════════════"
+          echo "          UNIFIED PIPELINE SUMMARY - ${{ env.SERVICE_NAME }}"
+          echo "════════════════════════════════════════════════════════════"
+          echo ""
+          echo "📋 Governance Controls Applied:"
+          echo "   All thresholds enforced by Engineering Manager-approved configs"
+          echo "   Developers cannot bypass security/quality gates"
+          echo ""
+          echo "✅ Pipeline Stages Executed:"
+          echo "   [Setup]           ✅ Governance configs loaded"
+          echo "   [Unit Tests]      ${{ needs.unit-tests.result }}"
+          echo "   [Security Scan]   ${{ needs.security-scan.result }}"
+          echo "   [Code Quality]    ${{ needs.code-quality.result }}"
+          echo "   [Contract Tests]  ${{ needs.contract-tests.result }}"
+          echo "   [Integration]     ${{ needs.integration-tests.result }}"
+          echo "   [BDD Tests]       ${{ needs.bdd-tests.result }}"
+          echo ""
+          echo "🔒 Governance Repository: ${{ env.GOVERNANCE_REPO }}"
+          echo "🎯 Service: ${{ env.SERVICE_NAME }}"
+          echo "════════════════════════════════════════════════════════════"
+
+      - name: Check Overall Pipeline Status
+        run: |
+          # Fail the pipeline if any critical step failed
+          if [[ "${{ needs.unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.security-scan.result }}" == "failure" ]] || \
+             [[ "${{ needs.code-quality.result }}" == "failure" ]]; then
+            echo "❌ Pipeline failed: One or more critical governance checks failed"
+            exit 1
+          fi
+
+          echo "✅ All governance checks passed successfully"

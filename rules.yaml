@@ -1,0 +1,121 @@
+# NGPOS Pipeline Governance Rules
+# Define patterns to identify workflow capabilities
+
+# Security scanning patterns
+security_patterns:
+  - security
+  - scan
+  - snyk
+  - sonar
+  - trivy
+  - codeql
+  - sast
+  - dast
+  - dependency.*check
+  - vulnerability
+  - aqua
+  - checkmarx
+  - fortify
+  - veracode
+  - whitesource
+  - blackduck
+  - osv-scanner
+  - grype
+
+# Code quality patterns
+quality_patterns:
+  - lint
+  - quality
+  - sonar
+  - eslint
+  - pylint
+  - flake8
+  - rubocop
+  - prettier
+  - code.*quality
+  - static.*analysis
+  - code.*coverage
+  - complexity
+  - super-linter
+  - mega-linter
+
+# Build patterns
+build_patterns:
+  - build
+  - compile
+  - maven
+  - gradle
+  - npm.*build
+  - yarn.*build
+  - make
+  - go.*build
+  - dotnet.*build
+  - cargo.*build
+  - webpack
+  - rollup
+  - vite.*build
+  - mvn.*package
+  - ant
+
+# Test patterns
+test_patterns:
+  - test
+  - pytest
+  - jest
+  - mocha
+  - unittest
+  - mvn.*test
+  - go.*test
+  - npm.*test
+  - yarn.*test
+  - rspec
+  - karma
+  - jasmine
+  - cypress
+  - playwright
+  - selenium
+  - integration.*test
+  - e2e
+  - unit.*test
+
+# Deployment patterns
+deploy_patterns:
+  - deploy
+  - deployment
+  - release
+  - publish
+  - docker.*push
+  - kubernetes
+  - k8s
+  - kubectl
+  - helm
+  - terraform
+  - ansible
+  - cloudformation
+  - argo.*cd
+  - flux.*cd
+  - gke.*deploy
+  - eks.*deploy
+  - aks.*deploy
+  - azure.*deploy
+  - aws.*deploy
+  - gcp.*deploy
+  - heroku
+  - vercel
+  - netlify
+
+# Governance baseline requirements
+baseline:
+  pr_workflow_required: true
+  blocking_gate_required: true
+  security_scan_required: true
+  quality_scan_required: true
+  deploy_workflow_optional: true
+
+# Scoring weights (out of 100)
+scoring:
+  pr_workflow: 25
+  blocking_gate: 25
+  security_scan: 25
+  quality_scan: 25
+  deploy_workflow: 10  # bonus points

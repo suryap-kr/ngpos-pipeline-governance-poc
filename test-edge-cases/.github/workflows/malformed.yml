@@ -1,0 +1,8 @@
+# Test case: malformed YAML (invalid indentation)
+name: Malformed YAML
+on: push
+jobs:
+  test:
+  runs-on: ubuntu-latest
+    steps:
+      - run: echo "This will fail to parse"

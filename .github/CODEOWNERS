@@ -1,0 +1,123 @@
+# CODEOWNERS - Pipeline Governance Ownership Model
+# ==================================================
+#
+# PURPOSE:
+# This file enforces Engineering Manager (EM) approval for all pipeline governance
+# configuration changes. Developers cannot modify security, quality, or test standards
+# without EM review and approval.
+#
+# WHY THIS MATTERS:
+# - Prevents developers from lowering security thresholds (e.g., allowing critical vulnerabilities)
+# - Ensures code quality standards remain consistent across teams
+# - Maintains test coverage requirements
+# - Provides audit trail for governance changes
+# - Enforces separation of duties between development and governance
+#
+# GOVERNANCE FILES COVERED:
+# - snyk.properties        (Security vulnerability scanning thresholds)
+# - sonar.properties       (Code quality and coverage requirements)
+# - pact.properties        (Contract testing configuration)
+# - unit-test.properties   (Unit test coverage thresholds)
+# - bdd-test.properties    (Acceptance test requirements)
+# - integration-test.properties (Integration test configuration)
+#
+# HOW IT WORKS:
+# When a PR modifies any file in the governance/ folders, the respective Engineering
+# Manager must review and approve before the PR can be merged. GitHub will automatically
+# request their review.
+#
+# ==================================================
+
+# ------------------------------------------------------------------------------
+# POSAAS Service - Governance Configuration
+# Engineering Manager must approve all governance config changes for posaas
+# ------------------------------------------------------------------------------
+/governance/posaas/snyk.properties                    @ngpos-em-posaas
+/governance/posaas/sonar.properties                   @ngpos-em-posaas
+/governance/posaas/pact.properties                    @ngpos-em-posaas
+/governance/posaas/unit-test.properties               @ngpos-em-posaas
+/governance/posaas/bdd-test.properties                @ngpos-em-posaas
+/governance/posaas/integration-test.properties        @ngpos-em-posaas
+
+# Wildcard rule: Any file in posaas governance folder
+/governance/posaas/                                   @ngpos-em-posaas
+
+
+# ------------------------------------------------------------------------------
+# POSWF Service - Governance Configuration
+# Engineering Manager must approve all governance config changes for poswf
+# ------------------------------------------------------------------------------
+/governance/poswf/snyk.properties                     @ngpos-em-poswf
+/governance/poswf/sonar.properties                    @ngpos-em-poswf
+/governance/poswf/pact.properties                     @ngpos-em-poswf
+/governance/poswf/unit-test.properties                @ngpos-em-poswf
+/governance/poswf/bdd-test.properties                 @ngpos-em-poswf
+/governance/poswf/integration-test.properties         @ngpos-em-poswf
+
+# Wildcard rule: Any file in poswf governance folder
+/governance/poswf/                                    @ngpos-em-poswf
+
+
+# ------------------------------------------------------------------------------
+# NGPOS Java Reference - Governance Configuration
+# Engineering Manager must approve all governance config changes for Java reference
+# ------------------------------------------------------------------------------
+/governance/ngpos-java-reference/snyk.properties              @HarshitaY-KR
+/governance/ngpos-java-reference/sonar.properties             @HarshitaY-KR
+/governance/ngpos-java-reference/pact.properties              @HarshitaY-KR
+/governance/ngpos-java-reference/unit-test.properties         @HarshitaY-KR
+/governance/ngpos-java-reference/bdd-test.properties          @HarshitaY-KR
+/governance/ngpos-java-reference/integration-test.properties  @HarshitaY-KR
+
+# Wildcard rule: Any file in Java reference governance folder
+/governance/ngpos-java-reference/                     @HarshitaY-KR
+
+
+# ------------------------------------------------------------------------------
+# NGPOS Go Reference - Governance Configuration
+# Engineering Manager must approve all governance config changes for Go reference
+# ------------------------------------------------------------------------------
+/governance/ngpos-go-reference/snyk.properties                @HarshitaY-KR
+/governance/ngpos-go-reference/sonar.properties               @HarshitaY-KR
+/governance/ngpos-go-reference/pact.properties                @HarshitaY-KR
+/governance/ngpos-go-reference/unit-test.properties           @HarshitaY-KR
+/governance/ngpos-go-reference/bdd-test.properties            @HarshitaY-KR
+/governance/ngpos-go-reference/integration-test.properties    @HarshitaY-KR
+
+# Wildcard rule: Any file in Go reference governance folder
+/governance/ngpos-go-reference/                       @HarshitaY-KR
+
+
+# ------------------------------------------------------------------------------
+# NGPOS Python Reference - Governance Configuration
+# Engineering Manager must approve all governance config changes for Python reference
+# ------------------------------------------------------------------------------
+/governance/ngpos-python-reference/snyk.properties            @HarshitaY-KR
+/governance/ngpos-python-reference/sonar.properties           @HarshitaY-KR
+/governance/ngpos-python-reference/pact.properties            @HarshitaY-KR
+/governance/ngpos-python-reference/unit-test.properties       @HarshitaY-KR
+/governance/ngpos-python-reference/bdd-test.properties        @HarshitaY-KR
+/governance/ngpos-python-reference/integration-test.properties @HarshitaY-KR
+
+# Wildcard rule: Any file in Python reference governance folder
+/governance/ngpos-python-reference/                   @HarshitaY-KR
+
+
+# ------------------------------------------------------------------------------
+# Global Governance Folder Protection
+# Catch-all rule: Any governance folder modification requires EM approval
+# This acts as a safety net for any new files or subdirectories
+# ------------------------------------------------------------------------------
+/governance/                                          @ngpos-em-posaas @ngpos-em-poswf @HarshitaY-KR
+
+
+# ==================================================
+# NOTES:
+# - Specific file rules take precedence over wildcard rules
+# - All three EMs are owners of the global governance/ folder
+# - This file itself (.github/CODEOWNERS) should also require EM approval
+# - To add new governance configs, update this file accordingly
+# ==================================================
+
+# CODEOWNERS file itself requires all EMs to approve changes
+/.github/CODEOWNERS                                   @ngpos-em-posaas @ngpos-em-poswf @HarshitaY-KR

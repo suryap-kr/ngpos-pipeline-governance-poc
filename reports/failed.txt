@@ -1,0 +1,3 @@
+pos-receipts FAILED
+pos-service-fuel-drpin-kash-interface FAILED
+pos-service-FuelPriceChangeController FAILED

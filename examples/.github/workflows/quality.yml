@@ -1,0 +1,71 @@
+name: Code Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    # Non-blocking - allows PR to proceed even if quality gates fail
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  linting:
+    name: Code Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pylint flake8 black
+
+      - name: Run Pylint
+        run: pylint **/*.py
+        continue-on-error: true
+
+      - name: Run Flake8
+        run: flake8 .
+
+      - name: Check code formatting with Black
+        run: black --check .
+
+  complexity:
+    name: Code Complexity Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install radon
+        run: pip install radon
+
+      - name: Check cyclomatic complexity
+        run: |
+          radon cc . -a -nb
+          radon mi . -nb

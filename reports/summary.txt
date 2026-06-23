@@ -1,0 +1,72 @@
+===== payments-acceptance-workflow.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-elera-configurator-service.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-elera-orchestration-api.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-elera-sales-compliance.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-key-generation-service.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-service-business-day-api.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✗ Fail |
+
+===== pos-service-business-day-workflow.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✗ Fail |
+
+===== pos-service-sco-security.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
+===== pos-service-tender-restrictions.md =====
+**Compliance Score:** 100.0%
+| PR-triggered workflow | ✓ Pass |
+| Blocking build/test gate | ✓ Pass |
+| Security scan | ✓ Pass |
+| Quality scan | ✓ Pass |
+| Deploy workflow (optional) | ✓ Pass |
+
