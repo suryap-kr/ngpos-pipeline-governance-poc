@@ -47,7 +47,7 @@
 # POSWF Service - Governance Configuration
 # Engineering Manager must approve all governance config changes for poswf
 # ------------------------------------------------------------------------------
-/governance/poswf/snyk.properties                     @HarshitaY-KR
+/governance/poswf/snyk.properties                     @ba-kr
 /governance/poswf/sonar.properties                    @HarshitaY-KR
 /governance/poswf/pact.properties                     @HarshitaY-KR
 /governance/poswf/unit-test.properties                @HarshitaY-KR
