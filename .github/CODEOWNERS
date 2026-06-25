@@ -70,7 +70,7 @@
 /governance/ngpos-java-reference/integration-test.properties  @HarshitaY-KR
 
 # Wildcard rule: Any file in Java reference governance folder
-/governance/ngpos-java-reference/                     @HarshitaY-KR
+/governance/ngpos-java-reference/                     @HarshitaY-KR @ba-kr
 
 
 # ------------------------------------------------------------------------------
